@@ -191,6 +191,8 @@ license="LGPL v2.1"
 [[mods]]
     modId="client_command_test"
 [[mods]]
+    modId="registry_codec_test"
+[[mods]]
     modId="item_use_animation_test"
 
 # ADD ABOVE THIS LINE
