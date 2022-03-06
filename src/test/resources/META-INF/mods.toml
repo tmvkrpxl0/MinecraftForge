@@ -199,6 +199,8 @@ license="LGPL v2.1"
 [[mods]]
     modId="gametest_test"
 [[mods]]
+    modId="potion_size_event_test"
+[[mods]]
     modId="item_use_animation_test"
 
 # ADD ABOVE THIS LINE
