@@ -10,7 +10,12 @@
     }
  
     public Vec3 m_7860_(AbstractClientPlayer p_117785_, float p_117786_) {
-@@ -127,6 +_,9 @@
+@@ -123,10 +_,13 @@
+             if (useanim == UseAnim.SPYGLASS) {
+                return HumanoidModel.ArmPose.SPYGLASS;
+             }
+-         } else if (!p_117795_.f_20911_ && itemstack.m_150930_(Items.f_42717_) && CrossbowItem.m_40932_(itemstack)) {
++         } else if (!p_117795_.f_20911_ && itemstack.m_41720_() instanceof CrossbowItem && CrossbowItem.m_40932_(itemstack)) {
              return HumanoidModel.ArmPose.CROSSBOW_HOLD;
           }
  
