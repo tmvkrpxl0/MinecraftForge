@@ -229,6 +229,8 @@ license="LGPL v2.1"
 [[mods]]
     modId="banner_pattern_test"
 [[mods]]
+    modId="mod_mismatch_test"
+[[mods]]
     modId="item_use_animation_test"
 
 # ADD ABOVE THIS LINE
