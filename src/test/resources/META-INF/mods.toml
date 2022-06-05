@@ -225,6 +225,8 @@ license="LGPL v2.1"
 [[mods]]
     modId="custom_rarity_test"
 [[mods]]
+    modId="data_pack_registries_test"
+[[mods]]
     modId="item_use_animation_test"
 
 # ADD ABOVE THIS LINE
