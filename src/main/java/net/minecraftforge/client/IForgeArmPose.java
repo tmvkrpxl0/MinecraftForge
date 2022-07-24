@@ -39,8 +39,8 @@ public interface IForgeArmPose
      *
      * @param model   The humanoid model
      * @param entity  The humanoid entity
-     * @param isRight True if the animation is applied to the right arm, false if to the left arm.
+     * @param arm Arm to pose
      */
-    void applyTransform(HumanoidModel<?> model, LivingEntity entity, HumanoidArm isRight);
+    void applyTransform(HumanoidModel<?> model, LivingEntity entity, HumanoidArm arm);
 
 }
