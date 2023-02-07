@@ -489,6 +489,22 @@
              if (map == null) {
                 map = Maps.newEnumMap(EquipmentSlot.class);
              }
+@@ -2382,13 +_,14 @@
+                this.m_21204_().m_22178_(itemstack1.m_41638_(equipmentslot));
+             }
+          }
++         else if (itemstack1.requiresSync()) net.minecraftforge.network.ForgeNetwork.sendEquipmentSlotCapabilities(this, equipmentslot, itemstack1, false);
+       }
+ 
+       return map;
+    }
+ 
+    public boolean m_246525_(ItemStack p_252265_, ItemStack p_251043_) {
+-      return !ItemStack.m_41728_(p_251043_, p_252265_);
++      return !p_252265_.equals(p_251043_, true);
+    }
+ 
+    private void m_21091_(Map<EquipmentSlot, ItemStack> p_21092_) {
 @@ -2523,6 +_,9 @@
        this.f_19853_.m_46473_().m_6180_("jump");
        if (this.f_20899_ && this.m_6129_()) {

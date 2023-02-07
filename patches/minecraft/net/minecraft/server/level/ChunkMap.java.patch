@@ -64,3 +64,16 @@
     }
  
     protected PoiManager m_140424_() {
+@@ -1276,6 +_,12 @@
+       this.f_143031_.m_156794_(p_143076_, p_143077_);
+    }
+ 
++   // Forge: expose TrackedEntity#seenBy
++   @Nullable
++   public Set<ServerPlayerConnection> getSeenBy(Entity entity) {
++      var trackedEntity = this.f_140150_.get(entity.m_19879_());
++      return trackedEntity == null ? null : java.util.Collections.unmodifiableSet(trackedEntity.f_140475_);
++   }
+    class DistanceManager extends net.minecraft.server.level.DistanceManager {
+       protected DistanceManager(Executor p_140459_, Executor p_140460_) {
+          super(p_140459_, p_140460_);
