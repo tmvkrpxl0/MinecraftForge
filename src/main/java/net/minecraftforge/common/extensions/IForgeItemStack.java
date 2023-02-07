@@ -36,13 +36,14 @@ import net.minecraftforge.common.ToolActions;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import net.minecraftforge.common.capabilities.INetworkCapability;
 
 import java.util.Map;
 
 /*
  * Extension added to ItemStack that bounces to ItemSack sensitive Item methods. Typically this is just for convince.
  */
-public interface IForgeItemStack extends ICapabilitySerializable<CompoundTag>
+public interface IForgeItemStack extends ICapabilitySerializable<CompoundTag>, INetworkCapability
 {
     // Helpers for accessing Item data
     private ItemStack self()

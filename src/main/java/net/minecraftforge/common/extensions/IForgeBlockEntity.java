@@ -24,8 +24,9 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.client.model.data.ModelData;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import org.jetbrains.annotations.NotNull;
+import net.minecraftforge.common.capabilities.INetworkCapability;
 
-public interface IForgeBlockEntity extends ICapabilitySerializable<CompoundTag>
+public interface IForgeBlockEntity extends ICapabilitySerializable<CompoundTag>, INetworkCapability
 {
     private BlockEntity self() { return (BlockEntity) this; }
 

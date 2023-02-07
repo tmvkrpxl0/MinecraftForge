@@ -175,6 +175,7 @@ import net.minecraftforge.eventbus.api.Event.Result;
 import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoader;
+import net.minecraftforge.network.ForgeNetwork;
 import net.minecraftforge.resource.ResourcePackLoader;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistry;
@@ -550,6 +551,7 @@ public class ForgeHooks
                 {
                     entityPlayer.connection.send(pkt);
                 }
+                ForgeNetwork.sendBlockEntityCapabilities(blockEntity, true, Stream.of(entityPlayer.connection.getConnection()));
             }
         }
         return event.isCanceled() ? -1 : event.getExpToDrop();

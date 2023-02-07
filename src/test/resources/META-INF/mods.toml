@@ -16,6 +16,8 @@ license="LGPL v2.1"
     modId="block_grow_feature_test"
 [[mods]]
     modId="biome_modifiers_test"
+[[mods]]
+    modId="network_capability_test"
 
 [[mods]]
     modId="advancement_event_test"

@@ -28,11 +28,12 @@ import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.common.SoundAction;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.capabilities.INetworkCapability;
 import net.minecraftforge.entity.PartEntity;
 import net.minecraftforge.fluids.FluidType;
 import org.jetbrains.annotations.Nullable;
 
-public interface IForgeEntity extends ICapabilitySerializable<CompoundTag>
+public interface IForgeEntity extends ICapabilitySerializable<CompoundTag>, INetworkCapability
 {
     private Entity self() { return (Entity) this; }
 

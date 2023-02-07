@@ -68,6 +68,7 @@ import net.minecraftforge.registries.holdersets.AnyHolderSet;
 import net.minecraftforge.registries.holdersets.HolderSetType;
 import net.minecraftforge.registries.holdersets.NotHolderSet;
 import net.minecraftforge.registries.holdersets.OrHolderSet;
+import net.minecraftforge.network.ForgeNetwork;
 import net.minecraftforge.network.NetworkConstants;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -406,6 +407,7 @@ public class ForgeMod
         LOGGER.info(FORGEMOD,"Forge mod loading, version {}, for MC {} with MCP {}", ForgeVersion.getVersion(), MCPVersion.getMCVersion(), MCPVersion.getMCPVersion());
         INSTANCE = this;
         MinecraftForge.initialize();
+        ForgeNetwork.initialize();
         CrashReportCallables.registerCrashCallable("Crash Report UUID", ()-> {
             final UUID uuid = UUID.randomUUID();
             LOGGER.fatal("Preparing crash report with UUID {}", uuid);
