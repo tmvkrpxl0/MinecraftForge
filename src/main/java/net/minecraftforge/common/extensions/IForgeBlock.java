@@ -52,6 +52,9 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.ToolAction;
 import net.minecraftforge.common.ToolActions;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityProvider;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.jetbrains.annotations.Nullable;
 
@@ -950,5 +953,28 @@ public interface IForgeBlock
     default BlockState getAppearance(BlockState state, BlockAndTintGetter level, BlockPos pos, Direction side, @Nullable BlockState queryState, @Nullable BlockPos queryPos)
     {
         return state;
+    }
+
+    default <T> LazyOptional<T> getCapability(Capability<T> cap, Level level, BlockPos pos, BlockState state, @Nullable Direction direction) {
+        var pair = level.getOrCacheBlockCaps(state, pos);
+        return pair.getCapability(cap, direction);
+    }
+
+    class PlacedBlockInstance extends CapabilityProvider<PlacedBlockInstance> {
+        public final LevelAccessor level;
+        public final BlockState blockState;
+        public final BlockPos blockPos;
+
+        public PlacedBlockInstance(LevelAccessor level, BlockState blockState, BlockPos blockPos) {
+            super(PlacedBlockInstance.class, true);
+            this.level = level;
+            this.blockState = blockState;
+            this.blockPos = blockPos;
+        }
+
+        @Override
+        public String toString() {
+            return "PlacedBlockInstance[level=" + level + ", state=" + blockState + ", pos=" + blockPos + "]";
+        }
     }
 }

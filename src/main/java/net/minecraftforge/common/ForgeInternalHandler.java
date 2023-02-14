@@ -5,30 +5,44 @@
 
 package net.minecraftforge.common;
 
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ComposterBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.common.extensions.IForgeBlock;
 import net.minecraftforge.common.loot.LootModifierManager;
 import net.minecraftforge.common.util.FakePlayerFactory;
-import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.event.*;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.event.TagsUpdatedEvent;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.common.util.LogicalSidedProvider;
+import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.server.command.ForgeCommand;
 import net.minecraftforge.server.command.ConfigCommand;
+import org.jetbrains.annotations.NotNull;
 
 public class ForgeInternalHandler
 {
@@ -80,6 +94,10 @@ public class ForgeInternalHandler
     {
         if (!event.getLevel().isClientSide())
             FarmlandWaterManager.removeTickets(event.getChunk());
+
+        if (event.getLevel() instanceof Level level) {
+            level.invalidateBlockCapsInChunk(event.getChunk().getPos());
+        }
     }
 
     /*
@@ -134,6 +152,156 @@ public class ForgeInternalHandler
     {
         event.addListener(TierSortingRegistry.getReloadListener());
         event.addListener(CreativeModeTabRegistry.getReloadListener());
+    }
+
+    @SubscribeEvent
+    public void attachCapToComposter(AttachCapabilitiesEvent<IForgeBlock.PlacedBlockInstance> event)
+    {
+        var obj = event.getObject();
+        var blockState = obj.blockState;
+        var level = obj.level;
+        var blockPos = obj.blockPos;
+
+        if (blockState.getBlock() != Blocks.COMPOSTER) return;
+
+        LazyOptional<IItemHandler> up = LazyOptional.of(() -> new IItemHandler()
+        {
+            final int composterLevel = blockState.getValue(BlockStateProperties.LEVEL_COMPOSTER);
+
+            @Override
+            public int getSlots()
+            {
+                return 1;
+            }
+
+            @Override
+            public @NotNull ItemStack getStackInSlot(int slot)
+            {
+                return ItemStack.EMPTY;
+            }
+
+            @Override
+            public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate)
+            {
+                if (!isItemValid(slot, stack)) return stack;
+                if (!(level instanceof ServerLevel)) return stack;
+
+                ItemStack copied = stack.copy();
+
+                if (simulate)
+                    return copied.split(ComposterBlock.MAX_LEVEL - composterLevel);
+
+                BlockState current = blockState;
+                while (true)
+                {
+                    BlockState result = ComposterBlock.insertItem(current, (ServerLevel) level, copied, blockPos);
+
+                    if (result == current) break;
+                    current = result;
+                }
+
+                return copied;
+
+            }
+
+            @Override
+            public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate)
+            {
+                return ItemStack.EMPTY;
+            }
+
+            @Override
+            public int getSlotLimit(int slot)
+            {
+                if (slot == 0) return 1;
+
+                return 0;
+            }
+
+            @Override
+            public boolean isItemValid(int slot, @NotNull ItemStack stack)
+            {
+                if (slot != 0) return false;
+                if (!ComposterBlock.COMPOSTABLES.containsKey(stack.getItem())) return false;
+                if (composterLevel >= ComposterBlock.MAX_LEVEL) return false;
+
+                return true;
+            }
+        });
+
+        LazyOptional<IItemHandler> down = LazyOptional.of(() -> new IItemHandler()
+        {
+            final int composterLevel = blockState.getValue(ComposterBlock.LEVEL);
+            final ItemStack boneMeal = new ItemStack(Items.BONE_MEAL);
+
+            @Override
+            public int getSlots()
+            {
+                return 1;
+            }
+
+            @Override
+            public @NotNull ItemStack getStackInSlot(int slot)
+            {
+                if (slot == 0 && composterLevel == 8) return new ItemStack(Items.BONE_MEAL);
+
+                return ItemStack.EMPTY;
+            }
+
+            @Override
+            public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate)
+            {
+                return stack;
+            }
+
+            @Override
+            public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate)
+            {
+                if (slot != 0) return ItemStack.EMPTY;
+                if (composterLevel != 8) return ItemStack.EMPTY;
+                if (!(level instanceof ServerLevel)) return ItemStack.EMPTY;
+                if (!simulate)
+                {
+                    level.setBlock(blockPos, blockState.setValue(BlockStateProperties.LEVEL_COMPOSTER, 0), 3);
+                    level.playSound(null, blockPos, SoundEvents.COMPOSTER_EMPTY, SoundSource.BLOCKS, 1.0F, 1.0F);
+                }
+
+                return boneMeal;
+            }
+
+            @Override
+            public int getSlotLimit(int slot)
+            {
+                if (slot == 0) return 1;
+
+                return 0;
+            }
+
+            @Override
+            public boolean isItemValid(int slot, @NotNull ItemStack stack)
+            {
+                return false;
+            }
+        });
+
+        event.addCapability(
+            new ResourceLocation("forge", "composter"),
+            new ICapabilityProvider()
+            {
+
+                @Override
+                public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @org.jetbrains.annotations.Nullable Direction side)
+                {
+                    if (cap == ForgeCapabilities.ITEM_HANDLER)
+                    {
+                        if (side == Direction.UP) return up.cast();
+                        if (side == Direction.DOWN) return down.cast();
+                    }
+
+                    return LazyOptional.empty();
+                }
+            }
+        );
     }
 }
 

@@ -1,15 +1,16 @@
 --- a/net/minecraft/world/level/Level.java
 +++ b/net/minecraft/world/level/Level.java
-@@ -68,7 +_,7 @@
+@@ -68,7 +_,8 @@
  import net.minecraft.world.phys.Vec3;
  import net.minecraft.world.scores.Scoreboard;
  
 -public abstract class Level implements LevelAccessor, AutoCloseable {
++
 +public abstract class Level extends net.minecraftforge.common.capabilities.CapabilityProvider<Level> implements LevelAccessor, AutoCloseable, net.minecraftforge.common.extensions.IForgeLevel {
     public static final Codec<ResourceKey<Level>> f_46427_ = ResourceKey.m_195966_(Registries.f_256858_);
     public static final ResourceKey<Level> f_46428_ = ResourceKey.m_135785_(Registries.f_256858_, new ResourceLocation("overworld"));
     public static final ResourceKey<Level> f_46429_ = ResourceKey.m_135785_(Registries.f_256858_, new ResourceLocation("the_nether"));
-@@ -107,8 +_,14 @@
+@@ -107,8 +_,16 @@
     private final BiomeManager f_46420_;
     private final ResourceKey<Level> f_46421_;
     private long f_186455_;
@@ -18,6 +19,8 @@
 +   public java.util.ArrayList<net.minecraftforge.common.util.BlockSnapshot> capturedBlockSnapshots = new java.util.ArrayList<>();
 +   private final java.util.ArrayList<BlockEntity> freshBlockEntities = new java.util.ArrayList<>();
 +   private final java.util.ArrayList<BlockEntity> pendingFreshBlockEntities = new java.util.ArrayList<>();
++
++   private final java.util.Map<BlockPos, net.minecraftforge.common.extensions.IForgeBlock.PlacedBlockInstance> blockCapCache = new java.util.HashMap<>();
  
     protected Level(WritableLevelData p_220352_, ResourceKey<Level> p_220353_, Holder<DimensionType> p_220354_, Supplier<ProfilerFiller> p_220355_, boolean p_220356_, boolean p_220357_, long p_220358_, int p_220359_) {
 +      super(Level.class);
@@ -237,12 +240,10 @@
                    this.m_213960_(blockstate, blockpos, p_46719_, p_46718_, false);
                 }
              }
-@@ -931,6 +_,18 @@
- 
-    public BiomeManager m_7062_() {
+@@ -933,6 +_,18 @@
        return this.f_46420_;
-+   }
-+
+    }
+ 
 +   private double maxEntityRadius = 2.0D;
 +   @Override
 +   public double getMaxEntityRadius() {
@@ -253,6 +254,54 @@
 +      if (value > maxEntityRadius)
 +         maxEntityRadius = value;
 +      return maxEntityRadius;
++   }
++
+    public final boolean m_46659_() {
+       return this.f_46424_;
+    }
+@@ -941,6 +_,45 @@
+ 
+    public long m_183596_() {
+       return (long)(this.f_186455_++);
++   }
++
++   public net.minecraftforge.common.extensions.IForgeBlock.PlacedBlockInstance getOrCacheBlockCaps(BlockState blockState, BlockPos blockPos) {
++      var existing = blockCapCache.get(blockPos);
++      if (existing != null) {
++         if (existing.blockState != blockState) {
++            throw new RuntimeException("Previous PlacedBlockInstance has not been cleaned up properly!");
++         }
++
++         return existing;
++      }
++
++      var newPair = new net.minecraftforge.common.extensions.IForgeBlock.PlacedBlockInstance(this, blockState, blockPos);
++      blockCapCache.put(blockPos, newPair);
++      return newPair;
++   }
++
++   public void invalidateBlockCapsAtPos(BlockPos pos) {
++      var removed = blockCapCache.remove(pos);
++      if (removed != null) {
++         removed.invalidateCaps();
++      }
++   }
++
++   public void invalidateBlockCapsInChunk(ChunkPos chunkPos) {
++      int minX = chunkPos.m_45604_();
++      int maxX = chunkPos.m_45608_();
++
++      int minZ = chunkPos.m_45605_();
++      int maxZ = chunkPos.m_45609_();
++
++      blockCapCache.entrySet().removeIf(pair -> {
++         int blockX = pair.getKey().m_123341_();
++         int blockZ = pair.getKey().m_123343_();
++
++         boolean result = minX <= blockX && blockX <= maxX && minZ <= blockZ && blockZ <= maxZ;
++         if (result) pair.getValue().invalidateCaps();
++         return result;
++      });
     }
  
-    public final boolean m_46659_() {
+    public static enum ExplosionInteraction {

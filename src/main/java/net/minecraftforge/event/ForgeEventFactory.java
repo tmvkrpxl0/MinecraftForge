@@ -82,7 +82,9 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.ToolAction;
 import net.minecraftforge.common.capabilities.CapabilityDispatcher;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.common.extensions.IForgeBlock;
 import net.minecraftforge.common.util.BlockSnapshot;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.event.brewing.PlayerBrewedPotionEvent;
 import net.minecraftforge.event.brewing.PotionBrewEvent;
 import net.minecraftforge.event.entity.EntityEvent;
@@ -138,12 +140,15 @@ import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.Event.Result;
 import net.minecraftforge.fml.LogicalSide;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ForgeEventFactory
 {
+    private static final Logger logger = LogManager.getLogger(ForgeEventFactory.class);
 
     public static boolean onMultiBlockPlace(@Nullable Entity entity, List<BlockSnapshot> blockSnapshots, Direction direction)
     {
@@ -518,6 +523,22 @@ public class ForgeEventFactory
     private static CapabilityDispatcher gatherCapabilities(AttachCapabilitiesEvent<?> event, @Nullable ICapabilityProvider parent)
     {
         MinecraftForge.EVENT_BUS.post(event);
+        if (event.getGenericType().equals(IForgeBlock.PlacedBlockInstance.class))
+        {
+            event.getCapabilities().forEach((name, provider) -> {
+                if (provider instanceof INBTSerializable<?>)
+                {
+                    logger.warn(
+                        String.format(
+                            Locale.ENGLISH,
+                            "Provider %s(%s) is INBTSerializable, but block capabilities are never serialized!",
+                            provider.getClass().getTypeName(),
+                            name
+                        )
+                    );
+                }
+            });
+        }
         return event.getCapabilities().size() > 0 || parent != null ? new CapabilityDispatcher(event.getCapabilities(), event.getListeners(), parent) : null;
     }
 

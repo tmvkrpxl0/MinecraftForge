@@ -447,16 +447,7 @@ public class FluidUtil
      */
     public static LazyOptional<IFluidHandler> getFluidHandler(Level level, BlockPos blockPos, @Nullable Direction side)
     {
-        BlockState state = level.getBlockState(blockPos);
-        if (state.hasBlockEntity())
-        {
-            BlockEntity blockEntity = level.getBlockEntity(blockPos);
-            if (blockEntity != null)
-            {
-                return blockEntity.getCapability(ForgeCapabilities.FLUID_HANDLER, side);
-            }
-        }
-        return LazyOptional.empty();
+        return level.getCapabilityAt(ForgeCapabilities.FLUID_HANDLER, blockPos, side);
     }
 
     /**

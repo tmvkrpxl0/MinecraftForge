@@ -8,11 +8,23 @@ package net.minecraftforge.common.extensions;
 import java.util.Collection;
 import java.util.Collections;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.entity.PartEntity;
+import org.jetbrains.annotations.Nullable;
 
 public interface IForgeLevel extends ICapabilityProvider
 {
+    public default Level self() {
+        return (Level) this;
+    }
+
     /**
      * The maximum radius to scan for entities when trying to check bounding boxes. Vanilla's default is
      * 2.0D But mods that add larger entities may increase this.
@@ -33,5 +45,19 @@ public interface IForgeLevel extends ICapabilityProvider
     public default Collection<PartEntity<?>> getPartEntities()
     {
         return Collections.emptyList();
+    }
+
+    public default  <T> LazyOptional<T> getCapabilityAt(Capability<T> cap, BlockPos pos, @Nullable Direction direction) {
+        BlockState state = self().getBlockState(pos);
+        if (state.hasBlockEntity()) {
+            BlockEntity blockEntity = self().getBlockEntity(pos);
+            if (blockEntity != null) {
+                return self().getBlockEntity(pos).getCapability(cap, direction);
+            }
+        } else {
+            return state.getBlock().getCapability(cap, self(), pos, state, direction);
+        }
+
+        return LazyOptional.empty();
     }
 }

@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.entity.Hopper;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.DispenserBlockEntity;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
@@ -173,10 +174,8 @@ public class VanillaInventoryCodeHooks
 
             if (insertedItem)
             {
-                if (inventoryWasEmpty && destination instanceof HopperBlockEntity)
+                if (inventoryWasEmpty && destination instanceof HopperBlockEntity destinationHopper)
                 {
-                    HopperBlockEntity destinationHopper = (HopperBlockEntity)destination;
-
                     if (!destinationHopper.isOnCustomCooldown())
                     {
                         int k = 0;
@@ -230,22 +229,25 @@ public class VanillaInventoryCodeHooks
         return true;
     }
 
-    public static Optional<Pair<IItemHandler, Object>> getItemHandler(Level worldIn, double x, double y, double z, final Direction side)
+    public static Optional<Pair<IItemHandler, Object>> getItemHandler(Level level, double x, double y, double z, final Direction side)
     {
         int i = Mth.floor(x);
         int j = Mth.floor(y);
         int k = Mth.floor(z);
         BlockPos blockpos = new BlockPos(i, j, k);
-        net.minecraft.world.level.block.state.BlockState state = worldIn.getBlockState(blockpos);
+        BlockState state = level.getBlockState(blockpos);
 
         if (state.hasBlockEntity())
         {
-            BlockEntity blockEntity = worldIn.getBlockEntity(blockpos);
+            BlockEntity blockEntity = level.getBlockEntity(blockpos);
             if (blockEntity != null)
             {
                 return blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER, side)
-                    .map(capability -> ImmutablePair.<IItemHandler, Object>of(capability, blockEntity));
+                    .map(capability -> ImmutablePair.of(capability, blockEntity));
             }
+        } else {
+            return state.getBlock().getCapability(ForgeCapabilities.ITEM_HANDLER, level, blockpos, state, side)
+                .map(capability -> ImmutablePair.of(capability, state.getBlock()));
         }
 
         return Optional.empty();

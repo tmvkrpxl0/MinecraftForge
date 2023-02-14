@@ -166,7 +166,7 @@ public abstract class CapabilityProvider<B extends ICapabilityProviderImpl<B>> i
     }
 
     /*
-     * This function will allow getCability to return values again.
+     * This function will allow getCapability to return values again.
      * Modders can use this if they need to copy caps from one removed provider to a new one.
      * It is expected the modders who call this function, then call invalidateCaps() to invalidate the provider again.
      */
